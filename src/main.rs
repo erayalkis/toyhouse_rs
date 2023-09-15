@@ -1,6 +1,6 @@
 use dotenv::dotenv;
 use std::net::SocketAddr;
-use toyhouse_api::auth::log_in;
+use toyhouse_api::auth::{get_authorized_users, log_in};
 use toyhouse_api::request::create_cli;
 use toyhouse_api::router::get_router;
 
@@ -19,6 +19,7 @@ async fn main() {
     // get session cookie
     log_in(&cli).await;
 
+    get_authorized_users(&cli).await;
     // run our app with hyper
     // `axum::Server` is a re-export of `hyper::Server`
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));

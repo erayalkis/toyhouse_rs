@@ -62,3 +62,10 @@ async fn get_csrf_token(res: Response) -> String {
 
     return csrf_token.to_string();
 }
+
+pub async fn get_authorized_users(cli: &Client) {
+    let auths_url = "https://toyhou.se/~account/authorizers";
+    let res = cli.get(auths_url).send().await.unwrap();
+
+    println!("{}", res.text().await.unwrap());
+}
