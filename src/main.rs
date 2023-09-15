@@ -13,11 +13,12 @@ async fn main() {
     tracing_subscriber::fmt::init();
 
     let cli = create_cli();
+    let app = get_router();
 
+    println!("LOGGING IN...");
     // get session cookie
     log_in(&cli).await;
 
-    let app = get_router();
     // run our app with hyper
     // `axum::Server` is a re-export of `hyper::Server`
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));

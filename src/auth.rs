@@ -43,7 +43,13 @@ pub async fn log_in(cli: &Client) {
         .unwrap();
 
     let res_body = &login_res.text().await.unwrap();
-    println!("BODY: {}", res_body);
+
+    // Toyhouse sends a 200 even on failed logins, do manual check
+    // If the redirected page contains the substring `Log In` (currently - and most likely in the future as well - only available on the login page), we were not able to log in
+    // If the substring is not available, it means we logged in just fine
+    if res_body.contains("Log In") {
+        panic!("Invalid credentials, login not successful!")
+    }
 }
 
 async fn get_csrf_token(res: Response) -> String {
