@@ -20,6 +20,7 @@ pub async fn log_in(cli: &Client) {
         username, password
     );
 
+    // Makes a request to the /login page, receives XSRF_TOKEN cookie, and also parses CSRF token from page
     let csrf_res = cli.get(login_url).send().await.unwrap();
     let _token = get_csrf_token(csrf_res).await;
 
@@ -30,7 +31,9 @@ pub async fn log_in(cli: &Client) {
     };
     let body = serde_urlencoded::to_string(&login_payload).unwrap();
 
-    println!("SENDING LOGIN DATA WITH BODY {}", body);
+    // At this point, 4 things must be true.
+    // Body must have `username`, `password` and `_token` (the CSRF token we parsed)
+    // Request headers must contain XSRF_TOKEN cookie
     let login_res = cli
         .post(login_url)
         .header("Content-Type", "application/x-www-form-urlencoded")
