@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 axum = "0.6.20"
 hyper = { version = "0.14.27", features = ["full"] }
+reqwest = "0.11.20"
 serde = { version = "1.0.188", features = ["derive"] } # A serialization/deserialization framework.
 serde_json = { version = "1.0.89" } # Serde serializion/deserialization of JSON data.
 tokio = { version = "1.32.0", features = ["full"] }
