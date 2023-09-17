@@ -2,6 +2,8 @@ use reqwest::{self, Client, Response};
 use serde::{Deserialize, Serialize};
 use std::env::var;
 
+use crate::scraper::scrape;
+
 #[derive(Serialize, Deserialize)]
 struct LoginBody {
     _token: String,
@@ -22,7 +24,7 @@ pub async fn log_in(cli: &Client) {
 
     // Makes a request to the /login page, receives XSRF_TOKEN cookie, and also parses CSRF token from page
     let csrf_res = cli.get(login_url).send().await.unwrap();
-    let _token = get_csrf_token(csrf_res).await;
+    let _token = get_csrf_token(login_url, csrf_res).await;
 
     let login_payload = LoginBody {
         _token,
@@ -52,15 +54,19 @@ pub async fn log_in(cli: &Client) {
     }
 }
 
-async fn get_csrf_token(res: Response) -> String {
+async fn get_csrf_token(url: &str, res: Response) -> String {
     let html = res.text().await.unwrap();
-    let doc = scraper::Html::parse_document(&html);
 
-    let csrf_selector = scraper::Selector::parse("meta[name='csrf-token']").unwrap();
-    let csrf_ele = doc.select(&csrf_selector).nth(0).unwrap();
-    let csrf_token = csrf_ele.value().attr("content").unwrap();
+    let token = scrape(url, html, |doc| {
+        let csrf_selector = scraper::Selector::parse("meta[name='csrf-token']").unwrap();
+        let csrf_ele = doc.select(&csrf_selector).nth(0).unwrap();
+        let csrf_token = csrf_ele.value().attr("content").unwrap();
 
-    return csrf_token.to_string();
+        return csrf_token.to_owned();
+    })
+    .await;
+
+    return token.to_string();
 }
 
 pub async fn get_authorized_users(cli: &Client) {
