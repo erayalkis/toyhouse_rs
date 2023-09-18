@@ -1,6 +1,6 @@
 use reqwest::{self, Client};
 use serde::{Deserialize, Serialize};
-use std::env::var;
+use std::{collections::HashMap, env::var};
 
 use crate::scraper::scrape;
 
@@ -69,7 +69,7 @@ async fn get_csrf_token(cli: &Client, url: &str) -> String {
     return token.get(&0).unwrap().to_string();
 }
 
-pub async fn get_authorized_users(cli: &Client) {
+pub async fn get_authorized_users(cli: &Client) -> HashMap<i16, Vec<String>> {
     let auths_url = "https://toyhou.se/~account/authorizers";
 
     let res = cli.get(auths_url).send().await.unwrap();
@@ -86,5 +86,5 @@ pub async fn get_authorized_users(cli: &Client) {
     })
     .await;
 
-    println!("{:?}", auths);
+    return auths;
 }

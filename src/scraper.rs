@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use reqwest::Client;
-use scraper::Html;
+use scraper::{ElementRef, Html};
 
 pub async fn scrape<T: std::fmt::Debug>(
     cli: &Client,
@@ -19,15 +19,20 @@ pub async fn scrape<T: std::fmt::Debug>(
 
     if paginator_ele.is_some() {
         let p = paginator_ele.unwrap();
-        // First and last child are arrow buttonsö that lead to the prev/next page.
+        // First and last child are arrow buttons that lead to the prev/next page.
         let page_eles = p.children();
-        let p_length = page_eles.count();
+        let paginator_len = page_eles
+            .filter_map(|c| ElementRef::wrap(c))
+            .flat_map(|e| e.text())
+            .collect::<Vec<_>>()
+            .len();
 
-        // We don't want to include the first page, since we already have it. We don't want to include the arrow buttons as well, so thats a -3 to the total count for the max page count.
-        let max = p_length - 3;
+        // We don't want to include the arrow buttons as well, so thats a -3 to the total count for the max page count.
+        let max = paginator_len - 2;
         // We already have the first page, so start from the second one.
         let min = 2;
 
+        println!("Parsing from page {} to {}", min, max);
         extract_with_pagination(cli, &mut store, url, min, max, cb).await;
     }
 
@@ -48,15 +53,15 @@ pub async fn extract_with_pagination<T: std::fmt::Debug>(
     max: usize,
     callback: impl Fn(&Html) -> T,
 ) {
-    for i in min..max as i16 {
-        println!("On page {}", i + 1);
-        let page_url = format!("{}?page={}", url, i + 1);
+    for i in min..=max as i16 {
+        println!("In page {}", i);
+        let page_url = format!("{}?page={}", url, i);
         let resp = cli.get(page_url).send().await.unwrap();
         let text = resp.text().await.unwrap();
 
         let html = scraper::Html::parse_document(&text);
         let res = extract(&html, &callback);
 
-        store.insert(i + 1, res);
+        store.insert(i, res);
     }
 }
