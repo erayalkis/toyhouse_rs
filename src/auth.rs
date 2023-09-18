@@ -1,4 +1,4 @@
-use reqwest::{self, Client, Response};
+use reqwest::{self, Client};
 use serde::{Deserialize, Serialize};
 use std::env::var;
 
@@ -23,8 +23,7 @@ pub async fn log_in(cli: &Client) {
     );
 
     // Makes a request to the /login page, receives XSRF_TOKEN cookie, and also parses CSRF token from page
-    let csrf_res = cli.get(login_url).send().await.unwrap();
-    let _token = get_csrf_token(login_url, csrf_res).await;
+    let _token = get_csrf_token(cli, login_url).await;
 
     let login_payload = LoginBody {
         _token,
@@ -54,10 +53,11 @@ pub async fn log_in(cli: &Client) {
     }
 }
 
-async fn get_csrf_token(url: &str, res: Response) -> String {
+async fn get_csrf_token(cli: &Client, url: &str) -> String {
+    let res = cli.get(url).send().await.unwrap();
     let html = res.text().await.unwrap();
 
-    let token = scrape(url, html, |doc| {
+    let token = scrape::<String>(cli, url, html, |doc| {
         let csrf_selector = scraper::Selector::parse("meta[name='csrf-token']").unwrap();
         let csrf_ele = doc.select(&csrf_selector).nth(0).unwrap();
         let csrf_token = csrf_ele.value().attr("content").unwrap();
@@ -66,12 +66,25 @@ async fn get_csrf_token(url: &str, res: Response) -> String {
     })
     .await;
 
-    return token.to_string();
+    return token.get(&0).unwrap().to_string();
 }
 
 pub async fn get_authorized_users(cli: &Client) {
     let auths_url = "https://toyhou.se/~account/authorizers";
-    let res = cli.get(auths_url).send().await.unwrap();
 
-    println!("{}", res.text().await.unwrap());
+    let res = cli.get(auths_url).send().await.unwrap();
+    let html = res.text().await.unwrap();
+
+    let auths = scrape::<Vec<String>>(cli, auths_url, html, |doc| {
+        let name_selector = scraper::Selector::parse("a.user-name-badge").unwrap();
+        let names: Vec<String> = doc
+            .select(&name_selector)
+            .map(|ele| ele.text().collect())
+            .collect();
+
+        return names;
+    })
+    .await;
+
+    println!("{:?}", auths);
 }
