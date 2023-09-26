@@ -1,10 +1,24 @@
 use actix_web::{get, web::Data, App, HttpServer};
 use dotenv::dotenv;
-use toyhouse_api::{auth::log_in, request::create_cli};
+use reqwest::Client;
+use toyhouse_api::{
+    auth::{get_authorized_users, log_in},
+    request::create_cli,
+};
 
-#[get("/character/:id/gallery")]
-async fn get_character_gallery() -> &'static str {
-    "You passed the auth!"
+#[get("/")]
+async fn index() -> &'static str {
+    "Hello, World!"
+}
+
+#[get("/character/{id}/gallery")]
+async fn get_character_gallery(cli: Data<Client>) -> String {
+    println!("Hit character gallery route");
+    let auths = get_authorized_users(&cli).await;
+    println!("{:?}", auths);
+
+    let ser = serde_json::to_string(&auths).unwrap();
+    return ser;
 }
 
 #[actix_web::main]
@@ -18,6 +32,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(Data::new(cli.clone()))
             .service(get_character_gallery)
+            .service(index)
     })
     .bind(("127.0.0.1", 8080))?
     .run()
