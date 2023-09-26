@@ -6,15 +6,12 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-axum = "0.6.20"
+actix-web = "4"
 axum-macros = "0.3.8"
-dotenv = "0.15.0"
-hyper = { version = "0.14.27", features = ["full"] }
 reqwest = { version =  "0.11.20", features = ["cookies"] }
 scraper = "0.17.1"
 serde = { version = "1.0.188", features = ["derive"] } # A serialization/deserialization framework.
 serde_json = { version = "1.0.89" } # Serde serializion/deserialization of JSON data.
 serde_urlencoded = "0.7.1"
 tokio = { version = "1.32.0", features = ["full"] }
-tracing = "0.1.37"
-tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
+dotenv = "0.15.0"
