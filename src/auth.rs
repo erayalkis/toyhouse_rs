@@ -49,7 +49,9 @@ pub async fn log_in(cli: &Client) {
     // If the redirected page contains the substring `Log In` (currently - and most likely in the future as well - only available on the login page), we were not able to log in
     // If the substring is not available, it means we logged in just fine
     if res_body.contains("Log In") {
-        panic!("Invalid credentials, login not successful!")
+        panic!("Invalid credentials, login unsuccessful!")
+    } else {
+        println!("Login successful!");
     }
 }
 
